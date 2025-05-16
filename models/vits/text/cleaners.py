@@ -13,11 +13,12 @@ hyperparameter. Some cleaners are English-specific. You'll typically want to use
 '''
 
 import re
-from unidecode import unidecode
+
 from phonemizer import phonemize
 from phonemizer.backend import EspeakBackend
 from phonemizer.phonemize import _phonemize
-from phonemizer.separator import default_separator, Separator
+from phonemizer.separator import default_separator
+from unidecode import unidecode
 
 # Regular expression matching whitespace:
 _whitespace_re = re.compile(r'\s+')
@@ -104,3 +105,17 @@ def english_cleaners2(text):
   phonemes = _phonemize(espeak_backend, text, separator=default_separator, strip=True, njobs=1, prepend_text=False, preserve_empty_lines=False)
   phonemes = collapse_whitespace(phonemes)
   return phonemes
+
+def chinese_cleaners1(text):
+  from pypinyin import Style, pinyin
+  result = []
+  for char in text:
+    # Skip non-Chinese characters
+    if not '\u4e00' <= char <= '\u9fff':
+      continue
+    full = pinyin(char, style=Style.TONE3, heteronym=False)[0][0]
+    initial = pinyin(char, style=Style.INITIALS, heteronym=False)[0][0]
+    final = full[len(initial):]
+    result.append(initial)
+    result.append(final)
+  return result

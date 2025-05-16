@@ -92,7 +92,11 @@ if args.model == "VITS":
     # Imports for VITS model
     import sys
     import os
-    sys.path.append(os.path.join(Path(__file__).parent.absolute(), "models", "vits"))
+    sys.path.append(os.path.join(Path(__file__).parent.absolute(), "models", "vits-chinese-aishell3"))
+
+    from phonemizer.backend.espeak.wrapper import EspeakWrapper
+    _ESPEAK_LIBRARY = '/opt/homebrew/Cellar/espeak/1.48.04_1/lib/libespeak.1.1.48.dylib'
+    EspeakWrapper.set_library(_ESPEAK_LIBRARY)
 
     if args.enable_gpu == True:
         os.environ["CUDA_VISIBLE_DEVICES"] = "0"
@@ -111,7 +115,6 @@ if args.model == "VITS":
 
     import commons
     import utils
-    from data_utils import TextAudioLoader, TextAudioCollate, TextAudioSpeakerLoader, TextAudioSpeakerCollate
     from models import SynthesizerTrn
     from text.symbols import symbols
     from text import text_to_sequence
@@ -153,7 +156,14 @@ if args.model == "VITS":
                         x_tst = stn_tst.unsqueeze(0)
                         x_tst_lengths = torch.LongTensor([stn_tst.size(0)])
                         sid = torch.LongTensor(speaker_id)
-                        audio = self.model.infer(x_tst, x_tst_lengths, sid=sid, noise_scale=noise_scale, noise_scale_w=0.8, length_scale=duration_scale)[0][0,0].data.float()
+                        audio = self.model.infer(
+                            x_tst,
+                            x_tst_lengths,
+                            sid=sid,
+                            noise_scale=noise_scale,
+                            noise_scale_w=0.8,
+                            length_scale=duration_scale
+                        )[0][0,0].data.float()
 
                     audio = self.resampler(audio)  #resample to 16khz
                     audio = (audio*32767).numpy().astype(np.int16)  #convert to 16-bit PCM format
@@ -181,14 +191,14 @@ if args.model == "VITS":
     # Load VITS model
     print("Loading VITS model...")
     model = VitsModel(
-        hparams_path=os.path.join(Path(__file__).parent.absolute(), "models/vits/configs/vctk_base.json"),
-        checkpoint_path=os.path.join(Path(__file__).parent.absolute(), "models/vits/pretrained_models/pretrained_vctk.pth"),
+        hparams_path=os.path.join(Path(__file__).parent.absolute(), "models/vits-chinese-aishell3/configs/baker_base.json"),
+        checkpoint_path=os.path.join(Path(__file__).parent.absolute(), "models/vits-chinese-aishell3/pretrained_models/G_AISHELL.pth"),
         cuda=True if args.enable_gpu else False
     )
 
     # Get speaker ids and text for each generation
     if args.input_file == "":
-        ids = generate_speaker_ids(args.N, n_speakers=109, n_mix=5)  #for VITS model trained on VCTK dataset
+        ids = generate_speaker_ids(args.N, n_speakers=174, n_mix=5)  #for VITS model trained on VCTK dataset
         texts = []
         for i in range(len(ids)):
             text = re.sub("<any>", lambda x: random.choice(en_words), args.text)
@@ -214,7 +224,7 @@ if args.model == "VITS":
                 audio = audio[0:breaks[0][0]]
             else:  # try once more if initial generation fails
                 audio = model.generate_speech(txt=text, speaker_id=i, noise_bounds=(0.667, 1.5),
-                                              duration_bounds=(0.8, 1.2) if args.speaking_speed == 1.0 else (args.speaking_speed, args.speaking_speed))
+                                              duration_bounds=(0.6, 1.0) if args.speaking_speed == 1.0 else (args.speaking_speed, args.speaking_speed))
                 breaks = get_silence_times(audio, min_start = args.pause_min_start, max_end=args.pause_max_end)
                 if breaks and audio is not None:
                     audio = audio[0:breaks[0][0]]
