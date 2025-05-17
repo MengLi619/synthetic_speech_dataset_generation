@@ -1,2 +1,0 @@
-include TextToSpeechModel/bentoml.yml
-graft TextToSpeechModel/artifacts

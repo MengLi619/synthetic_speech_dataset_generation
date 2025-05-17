@@ -11,3 +11,4 @@ inflect==6.0.2
 protobuf==3.19.1
 pypinyin==0.54.0
 Cython
+Pinyin2Hanzi
