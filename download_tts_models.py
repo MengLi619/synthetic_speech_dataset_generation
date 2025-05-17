@@ -41,17 +41,10 @@ def download(url, filename):
 
 # Download files
 print("Downloading TTS models...\n")
-vits_model = "https://f002.backblazeb2.com/file/openwakeword-resources/tts_models/pretrained_vctk.pth"
-waveglow_model = "https://f002.backblazeb2.com/file/openwakeword-resources/tts_models/waveglow_256channels_universal_v5.pt"
-flowtron_libritts_model = "https://f002.backblazeb2.com/file/openwakeword-resources/tts_models/flowtron_libritts2p3k.pt"
+vits_model = "https://huggingface.co/csukuangfj/vits-zh-aishell3/resolve/main/G_AISHELL.pth"
 
 download(vits_model, vits_model.split("/")[-1])
-download(waveglow_model, waveglow_model.split("/")[-1])
-download(flowtron_libritts_model, flowtron_libritts_model.split("/")[-1])
 
-# Move model files to correct locations
 print("\nMoving model files.....")
-shutil.move(vits_model.split("/")[-1], os.path.join("models", "vits", "pretrained_models", vits_model.split("/")[-1]))
-shutil.move(waveglow_model.split("/")[-1], os.path.join("models", "waveglow", "TextToSpeechModel", "artifacts", waveglow_model.split("/")[-1]))
-shutil.move(flowtron_libritts_model.split("/")[-1], os.path.join("models", "waveglow", "TextToSpeechModel", "artifacts", flowtron_libritts_model.split("/")[-1]))
+shutil.move(vits_model.split("/")[-1], os.path.join(os.path.dirname(__file__), "models", "vits-chinese-aishell3", "pretrained_models", vits_model.split("/")[-1]))
 print("Done!")
